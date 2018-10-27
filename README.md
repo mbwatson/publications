@@ -5,9 +5,7 @@ This project is based on another [one of my repositories](https://github.com/ren
 
 This uses Docker to deploy a multi-container project: API built with Django Rest Framework (container 1), a React JS frontend (container 2), Postgres database (container 3), and a Nginx webserver (container 4).
 
-## Preparing your Project
-
-As mentioned above, this project comes packaged with the auto-generated Django project provided by `django-admin`. Beginning with this project, a more substantial project can be built. However, the more likely case is that you have an existing project, and you wish to drop it into *this* project. This section is intended to shed light on that process. Note that this walkthrough makes a few (reasonably common) assumptions about file locations and such.
+## Project Preparation
 
 The backend lives in the `./web` directory. The structure of that directory is shown below.
 
@@ -179,7 +177,7 @@ TBA
 
 The database is built off of the `postgres:10` image. The database credentials live in an external file (`postgres/db.env`), as they are also required by Django running in the `webapp` service.
 
-\* Note: Any database credentials altered in the `postgres/db.env` file will be conveniently scooped up by the necessary services. However, if you've already created the database, you will need to make the changes to the existing database by hand or take the more bullish approach and drop the volume completely and start fresh.
+\* Note: Any database credentials altered in the `postgres/db.env` file will be conveniently scooped up by the necessary services. However, if the database has already been created, the changes need to be made to the existing database by hand or take the more bullish approach and drop the volume completely and start fresh.
 
 Finally, we create a volume for the database so our data persists and pass traffic through the standard PostgreSQL port 5432. Notice that volume is listed at the top of the file with the `webapp` volumes.
 
@@ -193,13 +191,17 @@ Nginx will serve the static assets (as outlined in [the Django documentation](ht
 
 - `docker-compose up`
 
-The first time the application runs, the database will not be set up, and a 500 Server Error will be thrown. Thus you'll need to run the standard `python manage.py makemigrations` and `python manage.py migrate` commands inside the `webapp` container to initialize the database.
+The first time the application runs, the database will not be set up, and a 500 Server Error will be thrown. Thus the standard `python manage.py makemigrations` and `python manage.py migrate` commands need to be run inside the `webapp` container to initialize the database.
 
 This goes for `python manage.py createsuperuser`, too.
+
+For a faster approach, use `exec`, *e.g.*, `docker-compose up exec webapp python manage.py migrate`.
 
 ### Production
 
 - `docker-compose -f docker-compose.prod.yml up`
+
+In addition, it is likely that the detatch flag, `-d`, is desirable here.
 
 ## Additional References
 
