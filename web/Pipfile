@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = "==2.1.2"
+gunicorn = "*"
+"psycopg2-binary" = "*"
+djangorestframework = "*"
+django-cors-headers = "*"
+requests = "*"
+crossrefapi = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.6"

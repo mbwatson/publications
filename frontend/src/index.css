@@ -1,0 +1,19 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Open Sans', sans-serif;
+}
+
+main {
+    padding: 1rem;
+    margin: auto;
+    max-width: 720px;
+    @media (min-width: 680px) {
+        padding: 2rem;
+    }
+}
+
+/* Remove yellow background fill when text is present in text fields */
+input:-webkit-autofill {
+    -webkit-box-shadow: inset 0 0 0px 9999px white;
+}
