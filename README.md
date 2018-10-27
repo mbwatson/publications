@@ -1,7 +1,7 @@
 # Containerized Publications Application API and Frontend
 ### Django Backend, React Frontend, Postgres Database, served with Nginx
 
-This project is based on another one of my repositories: https://github.com/renciweb/dockerized-django-postgres-nginx](https://github.com/renciweb/dockerized-django-postgres-nginx). The difference is the addition of the container for the frontend, which is built in [React](https://reactjs.org/).
+This project is based on another [one of my repositories](https://github.com/renciweb/dockerized-django-postgres-nginx). The difference is the addition of the container for the frontend, which is built in [React](https://reactjs.org/).
 
 This uses Docker to deploy a multi-container project: API built with Django Rest Framework (container 1), a React JS frontend (container 2), Postgres database (container 3), and a Nginx webserver (container 4).
 
