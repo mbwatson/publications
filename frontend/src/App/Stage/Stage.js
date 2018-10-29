@@ -1,4 +1,5 @@
 import React from 'react';
+import config from '../../config'
 import { withStyles } from '@material-ui/core/styles';
 import axios from 'axios'
 
@@ -103,7 +104,7 @@ class Stage extends React.Component {
     }
 
     postDOI = (doi) => {
-        axios.post('config.apiUrl', {
+        axios.post(config.apiUrl, {
         // axios.post('/api/publications/', {
             doi: doi
         }).then(response => {
