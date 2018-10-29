@@ -7,6 +7,17 @@ volumes:
   pgdata:
 
 services:
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend/build:/frontend
+    ports:
+      - 80:80
+    depends_on:
+      - db
   webapp:
     container_name: webapp
     build:
@@ -37,7 +48,7 @@ services:
     container_name: server
     image: nginx:latest
     ports:
-      - 80:80
+      - 8080:8080
     volumes:
       - ./web/static_files:/web/static_files
       - ./web/media:/web/media
