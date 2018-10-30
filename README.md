@@ -185,7 +185,13 @@ Nginx will serve the static assets (as outlined in [the Django documentation](ht
 
 ### Development
 
-- `docker-compose up`
+#### Frontend
+
+- `/publications/frontend$ npm start`
+
+#### Everything Else
+
+- `/publications$ docker-compose up`
 
 The first time the application runs, the database will not be set up, and a 500 Server Error will be thrown. Thus the standard `python manage.py makemigrations` and `python manage.py migrate` commands need to be run inside the `webapp` container to initialize the database.
 
@@ -195,16 +201,19 @@ For a faster approach, use `exec`, *e.g.*, `docker-compose up exec webapp python
 
 ### Production
 
-- `docker-compose -f docker-compose.prod.yml up`
+- `/publications$ docker-compose -f docker-compose.prod.yml up`
 
 In addition, it is likely that the detatch flag, `-d`, is desirable here.
 
 ## Additional References
 
-- Docker: [https://docs.docker.com](https://docs.docker.com)
-- Docker Compose: [https://docs.docker.com/compose/](https://docs.docker.com/compose/)
-- Django: [https://docs.djangoproject.com/en/2.1/](https://docs.djangoproject.com/en/2.1/)
-- Django REST Framework: [https://www.django-rest-framework.org/](https://www.django-rest-framework.org/)
-- React JS: [https://reactjs.org/](https://reactjs.org/)
+- Docker
+  + Docker: [https://docs.docker.com](https://docs.docker.com)
+  + Docker Compose: [https://docs.docker.com/compose/](https://docs.docker.com/compose/)
+  + Docker Multi-Stage Builds [https://docs.docker.com/develop/develop-images/multistage-build/](https://docs.docker.com/develop/develop-images/multistage-build/)
+- Django
+  + Django: [https://docs.djangoproject.com/en/2.1/](https://docs.djangoproject.com/en/2.1/)
+  + Django REST Framework: [https://www.django-rest-framework.org/](https://www.django-rest-framework.org/)
 - Gunicorn: [https://gunicorn.org/](https://gunicorn.org/)
 - Nginx: [https://nginx.org/en/docs/](https://nginx.org/en/docs/)
+- React JS: [https://reactjs.org/](https://reactjs.org/)
