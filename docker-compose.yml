@@ -4,18 +4,6 @@ volumes:
   pgdata:
 
 services:
-  frontend:
-    container_name: react
-    build:
-      context: ./frontend/
-      dockerfile: Dockerfile
-    command: npm start
-    volumes:
-      - ./frontend:/var/www
-    ports:
-      - 3000:3000
-    depends_on:
-      - webapp
   webapp:
     container_name: django
     build:
@@ -25,7 +13,7 @@ services:
     volumes:
       - .:/src
     ports:
-      - "8000:8000"
+      - 8000:8000
     environment:
       - DJANGO_SETTINGS_MODULE=api.settings-dev
     depends_on:

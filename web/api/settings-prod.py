@@ -16,6 +16,16 @@ ALLOWED_HOSTS = [
 
 # DEBUG_PROPAGATE_EXCEPTIONS = True
 
+CORS_ORIGIN_WHITELIST = (
+    # 'localhost:3000',
+    'localhost',
+)
+CORS_ALLOW_METHODS = (
+    'GET',
+    'POST',
+    'PUT',
+)
+
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 

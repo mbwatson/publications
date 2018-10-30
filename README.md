@@ -37,7 +37,7 @@ $ tree ./web
 
 #### Dockerfile
 
-The Dockerfile used to build the Django container takes care of installing your project's dependencies; here we outline two common options for this step. One commonly uses either Pipenv or a requirements.txt file to define your project dependencies.
+The Dockerfile used to build the Django container takes care of copying over the project files and installing its dependencies.
 
 
 ```
@@ -46,38 +46,18 @@ FROM python:3.7
 
 ENV PYTHONUNBUFFERED 1
 
-RUN mkdir /web
-COPY . /web
-WORKDIR /web
+RUN mkdir /src
+COPY . /src
+WORKDIR /src
 
-######################
-###  Dependencies  ###
-######################
-
-# If using Pipenv...
+###  Dependencies
 RUN pip3 install pipenv
 COPY Pipfile Pipfile
 COPY Pipfile.lock Pipfile.lock
 RUN pipenv install --deploy --system
-
-# If using requirements.txt file...
-# RUN pip install -r requirements.txt
-
 ```
 
-Below describes how to proceed in either case. Note that if using one method, delete or comment out the other.
-
-### Environment
-
-This project uses Pipenv, and thus makes use of the files Pipfile and Pipfile.lock files in the Django root directory.
-
-The following lines in `web/Dockerfile` use the environment settings defined by Pipenv.
-
-```
-RUN pip3 install pipenv
-COPY Pipfile Pipfile
-COPY Pipfile.lock Pipfile.lock
-```
+Using Pipenv, we make use of the `Pipfile` and `Pipfile.lock` files in the Django root directory to build the desired environment.
 
 ### Docker Compose
 
@@ -104,11 +84,20 @@ services:
       - DJANGO_SETTINGS_MODULE=webapp.settings-dev
 ```
 
+We spin up the development React application development server separately with the customary `npm start` in the `frontend` directory. This is simply for speed reasons.
+
+The frontend is accessed on port 3000, while the backend is accessed on port 8000. Both of these ports are the defaults.
+
 ### Production
 
 The production situation starts up four services:
 
-- our Django API (`webapp`), its frontend (`frontend`), the database (`db`), and a webserver (`server`). These containers are spun up according to the following `docker-compose.prod.yml`.
+- our Django API (`webapp`),
+- its frontend (`frontend`),
+- the database (`db`),
+- and a webserver (`server`).
+
+These containers are spun up according to the following `docker-compose.prod.yml`.
 
 ```
 # ./docker-compose.prod.yml
@@ -122,19 +111,26 @@ volumes:
   pgdata:
 
 services:
+  frontend:
+    container_name: react
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile
+    depends_on:
+      - webapp
   webapp:
     container_name: webapp
     build:
       context: ./web/
       dockerfile: Dockerfile
-    command: gunicorn -w 4 webapp.wsgi:application -b 0.0.0.0:8000
+    command: gunicorn -w 4 api.wsgi:application -b 0.0.0.0:8000
     volumes:
       - ./web/static_files:/web/static_files
       - ./web/media:/web/media
     ports:
       - 8000:8000
     environment:
-      DJANGO_SETTINGS_MODULE: webapp.settings-prod
+      DJANGO_SETTINGS_MODULE: api.settings-prod
     env_file:
       - ./postgres/db.env
     depends_on:
@@ -156,11 +152,11 @@ services:
     volumes:
       - ./web/static_files:/web/static_files
       - ./web/media:/web/media
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./frontend/build/:/web/frontend/
+      - ./default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - webapp
-
-
+      - frontend
 ```
 
 #### The API
@@ -171,7 +167,7 @@ There are other database-related environment variables that are required by both
 
 #### The Frontend
 
-TBA
+For the frontend service, we use of multistage builds to create a temporary image to construct the production build that is then copied to the production image, which is then served with Nginx. The temporary build image and original image's files and folder are discarded with the image. This leaves a leaner image for production. The Docker documentation has more information on [multi-stage builds](https://docs.docker.com/develop/develop-images/multistage-build/).
 
 #### The Database
 
