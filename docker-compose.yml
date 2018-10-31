@@ -4,16 +4,30 @@ volumes:
   pgdata:
 
 services:
+  frontend:
+    container_name: react
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile
+    volumes:
+      - './frontend:/usr/src/app'
+      - '/usr/src/app/node_modules'
+    environment:
+      - NODE_ENV=development
+    ports:
+      - 3000:3000
+    depends_on:
+      - webapp
   webapp:
     container_name: django
     build:
       context: ./web/
       dockerfile: Dockerfile
-    command: python3 ./web/manage.py runserver 0.0.0.0:8000
+    command: python3 manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/src
     ports:
-      - "8000:8000"
+      - 8000:8000
     environment:
       - DJANGO_SETTINGS_MODULE=api.settings-dev
     depends_on:
@@ -31,4 +45,3 @@ services:
       - ./postgres/pgdata:/var/lib/postgresql/data
     ports:
       - 5432:5432
-

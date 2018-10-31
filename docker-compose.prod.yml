@@ -5,19 +5,34 @@ volumes:
   media:
   conf:
   pgdata:
+  frontend:
 
 services:
+  frontend:
+    container_name: react
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile-prod
+    volumes:
+      - './frontend:/usr/src/app'
+      - '/usr/src/app/node_modules'
+      - ./web/static_files:/src/static_files
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - webapp
+    ports:
+      - 80:80
   webapp:
     container_name: webapp
     build:
       context: ./web/
       dockerfile: Dockerfile
-    command: gunicorn -w 4 api.wsgi:application -b 0.0.0.0:8000
+    command: gunicorn -w 4 api.wsgi:application -b 0.0.0.0:8080
     volumes:
-      - ./web/static_files:/web/static_files
-      - ./web/media:/web/media
+      - ./web/static_files:/src/static_files
     ports:
-      - 8000:8000
+      - 8080:8080
     environment:
       DJANGO_SETTINGS_MODULE: api.settings-prod
     env_file:
@@ -37,10 +52,10 @@ services:
     container_name: server
     image: nginx:latest
     ports:
-      - 80:80
+      - 8000:8000
     volumes:
-      - ./web/static_files:/web/static_files
-      - ./web/media:/web/media
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./web/static_files:/src/static_files
+      - ./default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - webapp
+      - frontend
