@@ -17,8 +17,8 @@ ALLOWED_HOSTS = [
 # DEBUG_PROPAGATE_EXCEPTIONS = True
 
 CORS_ORIGIN_WHITELIST = (
-    # 'localhost:3000',
     'localhost',
+    'localhost:3000',
 )
 CORS_ALLOW_METHODS = (
     'GET',

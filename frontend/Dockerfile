@@ -1,16 +1,20 @@
-# build environment
-FROM node:10.12.0-alpine as builder
-RUN mkdir /src
-WORKDIR /src
-ENV PATH /src/node_modules/.bin:$PATH
-COPY package.json /src/package.json
+# base image
+FROM node:10.12.0-alpine
+
+# set working directory
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
+
+# add `/usr/src/app/node_modules/.bin` to $PATH
+ENV PATH /usr/src/app/node_modules/.bin:$PATH
+
+# add api url
+ENV REACT_APP_API_URL http://localhost:8000/api/publications/
+
+# install and cache app dependencies
+COPY package.json /usr/src/app/package.json
 RUN npm install --silent
 RUN npm install react-scripts@1.1.1 -g --silent
-COPY . /src
-RUN npm run build
 
-# production environment
-FROM nginx:1.13.9-alpine
-COPY --from=builder /src/build /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# start app
+CMD ["npm", "start"]

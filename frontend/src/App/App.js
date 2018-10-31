@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import config from '../config'
 import axios from 'axios'
 
 import { SettingsProvider } from '../contexts/SettingsContext'
@@ -16,6 +15,7 @@ import ShowAllButton from '../components/Forms/ShowAll'
 class App extends Component {
     constructor(props) {
         super(props)
+        this.apiUrl = process.env.REACT_APP_API_URL
         this.state = {
             store: [],
             publications: [],
@@ -31,7 +31,7 @@ class App extends Component {
     }
     
     fetchPublications = () => {
-        axios.get(config.apiUrl).then(response => {
+        axios.get(this.apiUrl).then(response => {
             if (response.data.length > 0) {
                 this.setState({
                     store: response.data,
@@ -163,6 +163,7 @@ class App extends Component {
                         <Stage
                             newPublicationEvent={ this.confirmPublicationHandler }
                             allDois={ this.state.store.map( publication => publication.doi ) }
+                            apiUrl={ this.apiUrl }
                         />
                     </Header>
                     <main>
