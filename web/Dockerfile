@@ -2,9 +2,9 @@ FROM python:3.7
 
 ENV PYTHONUNBUFFERED 1
 
-RUN mkdir /api
-COPY . /api
-WORKDIR /api
+RUN mkdir /src
+COPY . /src
+WORKDIR /src
 
 ###  Dependencies
 RUN pip3 install pipenv
