@@ -37,8 +37,7 @@ $ tree ./web
 
 #### Dockerfile
 
-The Dockerfile used to build the Django container takes care of copying over the project files and installing its dependencies.
-
+The Dockerfile dictates how the Django container will be built, copying over the project files and installing its dependencies.
 
 ```
 # ./web/Dockerfile
@@ -61,43 +60,71 @@ Using Pipenv, we make use of the `Pipfile` and `Pipfile.lock` files in the Djang
 
 ### Docker Compose
 
-Two Docker Compose files exist here--one for development and one for production. Each references the corresponding Django settings module.
+Two Docker Compose files exist here--one for development and one for production--`docker-compose.yml` and `docker-compose.prod.yml`, respectively.
 
 #### Development
 
-Running `docker-compose up` spins up the development container, which simply serves the Django project via its builtin development server. Thus the `docker-compose.yml` file is simple:
+Running `docker-compose up` spins up the development container, using `docker-compose.yml` by default, simply serving the Django project and the React frontend via their respective builtin development servers. Thus the `docker-compose.yml` file is straight-forward:
 
 ```
 # ./docker-compose.yml
 
 services:
+  frontend:
+    container_name: react
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile
+    volumes:
+      - './frontend:/usr/src/app'
+      - '/usr/src/app/node_modules'
+    environment:
+      - NODE_ENV=development
+    ports:
+      - 3000:3000
+    depends_on:
+      - webapp
   webapp:
+    container_name: django
     build:
       context: ./web/
       dockerfile: Dockerfile
-    command: python3 ./web/manage.py runserver 0.0.0.0:8000
+    command: python3 manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/web
+      - .:/src
     ports:
-      - "8000:8000"
+      - 8000:8000
     environment:
-      - DJANGO_SETTINGS_MODULE=webapp.settings-dev
+      - DJANGO_SETTINGS_MODULE=api.settings-dev
+    depends_on:
+      - db
+  db:
+    image: postgres:10
+    container_name: postgres
+    environment:
+      POSTGRES_HOST: localhost
+      POSTGRES_DB: postgres_db
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD: postgres_password
+      POSTGRES_PORT: 5432
+    volumes:
+      - ./postgres/pgdata:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
 ```
 
-We spin up the development React application development server separately with the customary `npm start` in the `frontend` directory. This is simply for speed reasons.
-
-The frontend is accessed on port 3000, while the backend is accessed on port 8000. Both of these ports are the defaults.
+The frontend is accessed on port 3000, while the backend is accessed on port 8000. Both of these ports are the defaults. The mounted volumes allow for hot reloading during development.
 
 ### Production
 
 The production situation starts up four services:
 
 - our Django API (`webapp`),
-- its frontend (`frontend`),
 - the database (`db`),
+- its frontend (`frontend`),
 - and a webserver (`server`).
 
-These containers are spun up according to the following `docker-compose.prod.yml`.
+These containers are built according to the following `docker-compose.prod.yml`.
 
 ```
 # ./docker-compose.prod.yml
@@ -109,26 +136,34 @@ volumes:
   media:
   conf:
   pgdata:
+  frontend:
 
 services:
   frontend:
     container_name: react
     build:
       context: ./frontend/
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile-prod
+    volumes:
+      - './frontend:/usr/src/app'
+      - '/usr/src/app/node_modules'
+      - ./web/static_files:/src/static_files
+    environment:
+      - NODE_ENV=production
     depends_on:
       - webapp
+    ports:
+      - 80:80
   webapp:
     container_name: webapp
     build:
       context: ./web/
       dockerfile: Dockerfile
-    command: gunicorn -w 4 api.wsgi:application -b 0.0.0.0:8000
+    command: gunicorn -w 4 api.wsgi:application -b 0.0.0.0:8080
     volumes:
-      - ./web/static_files:/web/static_files
-      - ./web/media:/web/media
+      - ./web/static_files:/src/static_files
     ports:
-      - 8000:8000
+      - 8080:8080
     environment:
       DJANGO_SETTINGS_MODULE: api.settings-prod
     env_file:
@@ -148,11 +183,9 @@ services:
     container_name: server
     image: nginx:latest
     ports:
-      - 80:80
+      - 8000:8000
     volumes:
-      - ./web/static_files:/web/static_files
-      - ./web/media:/web/media
-      - ./frontend/build/:/web/frontend/
+      - ./web/static_files:/src/static_files
       - ./default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - webapp
@@ -161,13 +194,19 @@ services:
 
 #### The API
 
-The webapp service is our Django project container, which is served via [Gunicorn](https://gunicorn.org/). We also set an environment variable indicating that Django should use the production environment settings module.The webapp service is our Django project container, which is served via [Gunicorn](https://gunicorn.org/). We also set an environment variable indicating that Django should use the production environment settings module.
+The `webapp` service is our Django project container, which is served with [Gunicorn](https://gunicorn.org/). Gunicorn doesn't serve the project's static files, and require Nginx for serving. We also set an environment variable indicating that Django should use the production environment settings module.
 
-There are other database-related environment variables that are required by both the `webapp` and the `db` services and are thus extracted to an external file: `/postgres/db.env`.
+There are other database-related environment variables that are required by both the `webapp` and the `db` services and are thus extracted to an external file: `/postgres/db.env`. That file has the following structure.
+
+```
+POSTGRES_USER=postgres_user
+POSTGRES_PASSWORD=postgres_password
+POSTGRES_DB=postgres_db
+```
 
 #### The Frontend
 
-For the frontend service, we use of multistage builds to create a temporary image to construct the production build that is then copied to the production image, which is then served with Nginx. The temporary build image and original image's files and folder are discarded with the image. This leaves a leaner image for production. The Docker documentation has more information on [multi-stage builds](https://docs.docker.com/develop/develop-images/multistage-build/).
+For the frontend service, we use multistage builds, creating a temporary image to construct the production build that is then copied to the production image. The final build is served with Nginx, and the temporary build image and its associated files are discarded, leaving a leaner image for production. The Docker documentation has more information on [multi-stage builds](https://docs.docker.com/develop/develop-images/multistage-build/).
 
 #### The Database
 
