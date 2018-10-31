@@ -37,30 +37,11 @@ $ tree ./web
 
 #### Dockerfile
 
-The Dockerfile dictates how the Django container will be built, copying over the project files and installing its dependencies.
-
-```
-# ./web/Dockerfile
-FROM python:3.7
-
-ENV PYTHONUNBUFFERED 1
-
-RUN mkdir /src
-COPY . /src
-WORKDIR /src
-
-###  Dependencies
-RUN pip3 install pipenv
-COPY Pipfile Pipfile
-COPY Pipfile.lock Pipfile.lock
-RUN pipenv install --deploy --system
-```
-
-Using Pipenv, we make use of the `Pipfile` and `Pipfile.lock` files in the Django root directory to build the desired environment.
+The Dockerfiles dictate how the container will be built, and each service has its own Dockerfile in its respective directory.
 
 ### Docker Compose
 
-Two Docker Compose files exist here--one for development and one for production--`docker-compose.yml` and `docker-compose.prod.yml`, respectively.
+Two Docker Compose files exist--one for development and one for production--`docker-compose.yml` and `docker-compose.prod.yml`, respectively.
 
 #### Development
 
@@ -144,6 +125,8 @@ services:
     build:
       context: ./frontend/
       dockerfile: Dockerfile-prod
+      args:
+        - REACT_APP_API_URL=http://localhost:8000/api/publications/
     volumes:
       - './frontend:/usr/src/app'
       - '/usr/src/app/node_modules'
@@ -196,6 +179,29 @@ services:
 
 The `webapp` service is our Django project container, which is served with [Gunicorn](https://gunicorn.org/). Gunicorn doesn't serve the project's static files, and require Nginx for serving. We also set an environment variable indicating that Django should use the production environment settings module.
 
+By installing the dependencies according to Pipenv files--`Pipfile` and `Pipfile.lock`--in the Django root directory, Docker constructs the desired environment by installing dependencies and finishes up by collecting the static files.
+
+```
+# web/Dockerfile
+
+FROM python:3.7
+
+ENV PYTHONUNBUFFERED 1
+
+RUN mkdir /api
+COPY . /api
+WORKDIR /api
+
+###  Dependencies
+RUN pip3 install pipenv
+COPY Pipfile Pipfile
+COPY Pipfile.lock Pipfile.lock
+RUN pipenv install --deploy --system
+
+### Collect static files for serving to Django
+RUN python manage.py collectstatic --noinput
+```
+
 There are other database-related environment variables that are required by both the `webapp` and the `db` services and are thus extracted to an external file: `/postgres/db.env`. That file has the following structure.
 
 ```
@@ -208,6 +214,35 @@ POSTGRES_DB=postgres_db
 
 For the frontend service, we use multistage builds, creating a temporary image to construct the production build that is then copied to the production image. The final build is served with Nginx, and the temporary build image and its associated files are discarded, leaving a leaner image for production. The Docker documentation has more information on [multi-stage builds](https://docs.docker.com/develop/develop-images/multistage-build/).
 
+The environment variable for the API URL is required for the React, but it is only required in the production build, as the minimized production build is constructed. To accomplish this, and to keep management of the API URL in the compose file, we make use build arguments.
+
+We define the build argument `REACT_APP_API_URL`, which is available at buildtime, which is used to define the environment variable by the same name at runtime in the production dockerfile, `frontend/Dockerfile-prod`.
+
+```
+# /frontend/Dockerfile-prod
+
+# build environment
+FROM node:10.12.0-alpine as builder
+RUN mkdir /src
+WORKDIR /src
+ENV PATH /src/node_modules/.bin:$PATH
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=${REACT_APP_API_URL}
+COPY package.json /src/package.json
+RUN npm install --silent
+RUN npm install react-scripts@1.1.1 -g --silent
+COPY . /src
+RUN npm run build
+
+# production environment
+FROM nginx:1.15-alpine
+COPY --from=builder /src/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+More details about this method can be found in the Docker documentation: [https://docs.docker.com/compose/compose-file/#context](https://docs.docker.com/compose/compose-file/#context)
+
 #### The Database
 
 The database is built off of the `postgres:10` image. The database credentials live in an external file (`postgres/db.env`), as they are also required by Django running in the `webapp` service.
@@ -219,6 +254,8 @@ Finally, we create a volume for the database so our data persists and pass traff
 #### The Server
 
 Nginx will serve the static assets (as outlined in [the Django documentation](https://docs.djangoproject.com/en/2.1/howto/static-files/deployment/), so we mount those directories as separate volumes in both the `webapp` and the `server` service. Additionally, we also mount our custom Nginx configuration file `./nginx/default.conf` file to replace the default Nginx `.conf` file.
+
+No external build instructions are required, hence no need for a `Dockerfile` in the `postgres` directory.
 
 ## Quickstart
 
