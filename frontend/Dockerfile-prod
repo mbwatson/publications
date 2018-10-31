@@ -6,13 +6,13 @@ ENV PATH /src/node_modules/.bin:$PATH
 ARG REACT_APP_API_URL
 ENV REACT_APP_API_URL=${REACT_APP_API_URL}
 COPY package.json /src/package.json
-RUN npm install --silent
-RUN npm install react-scripts@1.1.1 -g --silent
+RUN npm install
+RUN npm install react-scripts@2.0.0 -g
 COPY . /src
 RUN npm run build
 
 # production environment
 FROM nginx:1.15-alpine
-COPY --from=builder /src/build /usr/share/nginx/html
+COPY --from=builder /src/build/ /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
