@@ -1,5 +1,5 @@
-# build environment
-FROM node:10.12.0-alpine as builder
+# Build environment
+FROM node:10.12.0-alpine AS builder
 RUN mkdir /src
 WORKDIR /src
 ENV PATH /src/node_modules/.bin:$PATH
@@ -11,8 +11,8 @@ RUN npm install react-scripts@2.0.3 -g
 COPY . /src
 RUN npm run build
 
-# production environment
+# Production environment
 FROM nginx:1.15-alpine
-COPY --from=builder /src/build /usr/share/nginx/html
 EXPOSE 80
+COPY --from=builder /src/build /usr/share/nginx/html/
 CMD ["nginx", "-g", "daemon off;"]
