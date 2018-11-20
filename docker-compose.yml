@@ -5,7 +5,7 @@ volumes:
 
 services:
   frontend:
-    container_name: react
+    container_name: frontend
     build:
       context: ./frontend/
       dockerfile: Dockerfile
@@ -18,15 +18,15 @@ services:
     ports:
       - 3000:3000
     depends_on:
-      - webapp
-  webapp:
-    container_name: django
+      - backend
+  backend:
+    container_name: backend
     build:
-      context: ./web/
+      context: ./backend/
       dockerfile: Dockerfile
-    command: python3 manage.py runserver 0.0.0.0:8000
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/src
+      - ./backend:/src
     ports:
       - 8000:8000
     environment:
@@ -34,8 +34,8 @@ services:
     depends_on:
       - db
   db:
-    image: postgres:10
     container_name: postgres
+    image: postgres:10
     environment:
       POSTGRES_HOST: localhost
       POSTGRES_DB: postgres_db

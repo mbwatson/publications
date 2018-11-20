@@ -104,7 +104,6 @@ class Stage extends React.Component {
 
     postDOI = (doi) => {
         axios.post(this.props.apiUrl, {
-        // axios.post('/api/publications/', {
             doi: doi
         }).then(response => {
             console.log(`Successfully posted publication with DOI ${doi}`)

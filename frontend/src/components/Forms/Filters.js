@@ -1,8 +1,7 @@
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
-import { Grid, FormControl, InputLabel, TextField, IconButton } from '@material-ui/core'
+import { Grid, FormControl, InputLabel, TextField, IconButton, NativeSelect } from '@material-ui/core'
 import { Backspace as BackspaceIcon } from '@material-ui/icons'
-import NativeSelect from '@material-ui/core/NativeSelect'
 import _ from 'lodash'
 
 const styles = (theme) => ({

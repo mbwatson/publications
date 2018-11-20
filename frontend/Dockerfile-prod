@@ -3,11 +3,8 @@ FROM node:10.12.0-alpine AS builder
 RUN mkdir /src
 WORKDIR /src
 ENV PATH /src/node_modules/.bin:$PATH
-ARG REACT_APP_API_URL
-ENV REACT_APP_API_URL=${REACT_APP_API_URL}
 COPY package.json /src/package.json
 RUN npm install
-RUN npm install react-scripts@2.0.3 -g
 COPY . /src
 RUN npm run build
 

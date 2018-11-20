@@ -19,6 +19,7 @@ ALLOWED_HOSTS = [
 CORS_ORIGIN_WHITELIST = (
     'localhost',
     'localhost:3000',
+    '204.48.18.56', # Change this to deployment host
 )
 CORS_ALLOW_METHODS = (
     'GET',
