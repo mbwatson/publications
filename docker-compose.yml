@@ -14,7 +14,6 @@ services:
       - '/usr/src/app/node_modules'
     environment:
       - NODE_ENV=development
-      - REACT_APP_API_URL=http://localhost:8000/api/publications/
     ports:
       - 3000:3000
     depends_on:
