@@ -3,6 +3,7 @@ FROM node:10.12.0-alpine AS builder
 RUN mkdir /src
 WORKDIR /src
 ENV PATH /src/node_modules/.bin:$PATH
+ENV REACT_APP_API_URL http://localhost:8000/api/publications/
 COPY package.json /src/package.json
 RUN npm install
 COPY . /src
