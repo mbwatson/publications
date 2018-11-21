@@ -15,8 +15,11 @@ import ShowAllButton from '../components/Forms/ShowAll'
 class App extends Component {
     constructor(props) {
         super(props)
-        // this.apiUrl = process.env.REACT_APP_API_URL
-        this.apiUrl = 'http://localhost:8000/api/publications/'
+        this.apiUrl = (process.env.NODE_ENV === 'production')
+            ? 'http://204.48.18.56:8000/api/publications/'
+            : 'http://localhost:8000/api/publications/'
+        console.log(this.apiUrl)
+        // this.apiUrl = 'http://localhost:8000/api/publications/'
         this.state = {
             store: [],
             publications: [],
