@@ -12,6 +12,7 @@ DEBUG = False
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
+	'204.48.18.56',
 ]
 
 # DEBUG_PROPAGATE_EXCEPTIONS = True
